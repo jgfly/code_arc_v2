@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>nano-vllm-test — component structure</title>
+<style>
+body{font-family:'Segoe UI','Inter',sans-serif;background:#0d0e1a;color:#e0e0e0;padding:28px 36px;line-height:1.55}
+h1{font-size:18px;color:#c8c8f0;margin-bottom:4px}
+.sub{color:#666680;font-size:12px;margin-bottom:18px}
+.flow{position:relative}
+.node{display:inline-block;min-width:130px;padding:5px 10px;border-radius:8px;font-size:12px;font-family:'Cascadia Code','Fira Code',monospace;margin:4px;vertical-align:top}
+.node .nm{font-weight:700}
+.node .rl{font-size:9px;text-transform:uppercase;opacity:.7;float:right}
+.entry{background:#3e4280;color:#d8d8f8}
+.engine{background:#6a5a2a;color:#e8d8a0}
+.layers{background:#2a6a3a;color:#a0e0a0}
+.models{background:#1e6a8a;color:#a0d8f0}
+.utils{background:#5a4a6a;color:#d0b0e0}
+.config{background:#3a3a52;color:#b0b0c8}
+.edge{color:#e8a040;font-size:11px}
+code{font-family:'Cascadia Code','Fira Code',monospace;font-size:12px;color:#8ad0f0}
+</style>
+</head>
+<body>
+<h1>nano-vllm-test</h1>
+<div class="sub">Component structure — a <b>module-level call-flow graph</b>. The LLM places each module by
+architectural role and draws the meaningful call directions. Machine-readable form is the
+<code>#code-arc-structure</code> JSON island at the bottom; <code>code_arc_v2</code> reads that and adds
+class/function detail under each module.</div>
+
+<div class="flow">
+  <div><span class="node entry"><span class="nm">example</span><span class="rl">entry</span></span>
+       <span class="node entry"><span class="nm">bench</span><span class="rl">entry</span></span>
+       <span class="node config"><span class="nm">sampling_params</span><span class="rl">config</span></span>
+       <span class="node config"><span class="nm">config</span><span class="rl">config</span></span></div>
+  <div class="edge">│ calls</div>
+  <div><span class="node engine"><span class="nm">nanovllm.llm</span><span class="rl">facade</span></span></div>
+  <div class="edge">│</div>
+  <div><span class="node engine"><span class="nm">engine.llm_engine</span><span class="rl">engine</span></span></div>
+  <div class="edge">├──────────┬─────────────┐</div>
+  <div><span class="node engine"><span class="nm">engine.scheduler</span><span class="rl">scheduler</span></span>
+       <span class="node engine"><span class="nm">engine.model_runner</span><span class="rl">runner</span></span>
+       <span class="node engine"><span class="nm">engine.sequence</span></span></div>
+  <div class="edge">│                         │ ┌──────┬───────┐</div>
+  <div><span class="node engine"><span class="nm">engine.block_manager</span></span>
+       <span class="node models"><span class="nm">models.qwen3</span><span class="rl">model</span></span>
+       <span class="node utils"><span class="nm">utils.loader</span></span>
+       <span class="node utils"><span class="nm">utils.context</span></span>
+       <span class="node layers"><span class="nm">layers.sampler</span></span></div>
+  <div class="edge">                          │ ┌────┬─────┬──────┬──────┬─────────┬──────────┐</div>
+  <div><span class="node layers"><span class="nm">layers.linear</span></span>
+       <span class="node layers"><span class="nm">layers.attention</span></span>
+       <span class="node layers"><span class="nm">layers.rotary_embedding</span></span>
+       <span class="node layers"><span class="nm">layers.layernorm</span></span>
+       <span class="node layers"><span class="nm">layers.activation</span></span>
+       <span class="node layers"><span class="nm">layers.embed_head</span></span></div>
+</div>
+
+<script type="application/json" id="code-arc-structure">
+{"version":2,"project":"nano-vllm-test","modules":[{"full_name":"example","role":"entry","subsystem":"entry","x":80,"y":40,"note":"usage example"},{"full_name":"bench","role":"entry","subsystem":"entry","x":320,"y":40,"note":"benchmark"},{"full_name":"test","role":"entry","subsystem":"entry","x":560,"y":40,"note":"empty test file"},{"full_name":"nanovllm.sampling_params","role":"config","subsystem":"config","x":820,"y":40,"note":"sampling parameters"},{"full_name":"nanovllm.config","role":"config","subsystem":"config","x":1060,"y":40,"note":"model/runtime config"},{"full_name":"nanovllm.llm","role":"facade","subsystem":"nanovllm","x":180,"y":200,"note":"LLM entry — engine facade"},{"full_name":"nanovllm.engine.llm_engine","role":"engine","subsystem":"engine","x":180,"y":360,"note":"orchestrates scheduler + runner"},{"full_name":"nanovllm.engine.scheduler","role":"scheduler","subsystem":"engine","x":60,"y":520,"note":"schedules sequences"},{"full_name":"nanovllm.engine.model_runner","role":"runner","subsystem":"engine","x":360,"y":520,"note":"runs forward pass"},{"full_name":"nanovllm.engine.sequence","role":"seq","subsystem":"engine","x":660,"y":520,"note":"sequence state"},{"full_name":"nanovllm.layers.sampler","role":"layer","subsystem":"layers","x":920,"y":520,"note":"sampling logits"},{"full_name":"nanovllm.engine.block_manager","role":"blocks","subsystem":"engine","x":60,"y":680,"note":"KV block pool"},{"full_name":"nanovllm.models.qwen3","role":"model","subsystem":"models","x":360,"y":680,"note":"Qwen3 model definition"},{"full_name":"nanovllm.utils.loader","role":"loader","subsystem":"utils","x":920,"y":680,"note":"weight loader"},{"full_name":"nanovllm.utils.context","role":"context","subsystem":"utils","x":1120,"y":680,"note":"generation context"},{"full_name":"nanovllm.layers.linear","role":"layer","subsystem":"layers","x":60,"y":840,"note":"parallel linear"},{"full_name":"nanovllm.layers.attention","role":"layer","subsystem":"layers","x":260,"y":840,"note":"attention"},{"full_name":"nanovllm.layers.rotary_embedding","role":"layer","subsystem":"layers","x":460,"y":840,"note":"RoPE"},{"full_name":"nanovllm.layers.layernorm","role":"layer","subsystem":"layers","x":660,"y":840,"note":"RMSNorm"},{"full_name":"nanovllm.layers.activation","role":"layer","subsystem":"layers","x":860,"y":840,"note":"SiLU+mul"},{"full_name":"nanovllm.layers.embed_head","role":"layer","subsystem":"layers","x":1060,"y":840,"note":"embedding + head"}],"edges":[{"source":"example","target":"nanovllm.llm"},{"source":"example","target":"nanovllm.sampling_params"},{"source":"bench","target":"nanovllm.llm"},{"source":"bench","target":"nanovllm.sampling_params"},{"source":"nanovllm.llm","target":"nanovllm.engine.llm_engine"},{"source":"nanovllm.llm","target":"nanovllm.config"},{"source":"nanovllm.llm","target":"nanovllm.sampling_params"},{"source":"nanovllm.engine.llm_engine","target":"nanovllm.config"},{"source":"nanovllm.engine.llm_engine","target":"nanovllm.engine.scheduler"},{"source":"nanovllm.engine.llm_engine","target":"nanovllm.engine.model_runner"},{"source":"nanovllm.engine.llm_engine","target":"nanovllm.engine.sequence"},{"source":"nanovllm.engine.scheduler","target":"nanovllm.engine.block_manager"},{"source":"nanovllm.engine.scheduler","target":"nanovllm.engine.sequence"},{"source":"nanovllm.engine.scheduler","target":"nanovllm.engine.model_runner"},{"source":"nanovllm.engine.model_runner","target":"nanovllm.models.qwen3"},{"source":"nanovllm.engine.model_runner","target":"nanovllm.layers.sampler"},{"source":"nanovllm.engine.model_runner","target":"nanovllm.utils.loader"},{"source":"nanovllm.engine.model_runner","target":"nanovllm.utils.context"},{"source":"nanovllm.engine.model_runner","target":"nanovllm.engine.sequence"},{"source":"nanovllm.models.qwen3","target":"nanovllm.layers.linear"},{"source":"nanovllm.models.qwen3","target":"nanovllm.layers.attention"},{"source":"nanovllm.models.qwen3","target":"nanovllm.layers.rotary_embedding"},{"source":"nanovllm.models.qwen3","target":"nanovllm.layers.layernorm"},{"source":"nanovllm.models.qwen3","target":"nanovllm.layers.activation"},{"source":"nanovllm.models.qwen3","target":"nanovllm.layers.embed_head"},{"source":"nanovllm.layers.attention","target":"nanovllm.utils.context"},{"source":"nanovllm.layers.attention","target":"nanovllm.layers.rotary_embedding"},{"source":"nanovllm.layers.embed_head","target":"nanovllm.utils.context"}]}
+</script>
+</body>
+</html>
