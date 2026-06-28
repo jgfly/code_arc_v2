@@ -697,17 +697,19 @@ function openNavMenu(id,x,y){
 document.addEventListener('mousedown',function(e){if(navMenu.classList.contains('open')&&!navMenu.contains(e.target))closeNavMenu();});
 
 // ========== Navigation ==========
-// Open the full ancestor path of `id` so the block becomes visible/centered, without
-// collapsing anything. Modules -> open; classes -> open (force-open even if slider is below);
-// the clicked block itself is never collapsed.
+// Open the full ancestor path of `id` so the clicked block becomes visible and can be centered,
+// without collapsing anything. The convention is: modCollapsed[id]/classCollapsed[id] === true
+// means OPEN (override), false means COLLAPSED (override), undefined means follow expandLevel.
+// So to force-open we set true. The clicked block itself is opened too (module or its parent
+// class for a method).
 function expandPathTo(id){
   var node=nodeMap[id];if(!node)return;
-  if(node.type==='module')modCollapsed[node.id]=false;
-  else if(node.type==='class')classCollapsed[node.id]=false;
+  if(node.type==='module')modCollapsed[node.id]=true;
+  else if(node.type==='class')classCollapsed[node.id]=true;
   var p=parentMap[id];
   while(p){
-    if(p.type==='module')modCollapsed[p.id]=false;
-    else if(p.type==='class')classCollapsed[p.id]=false;
+    if(p.type==='module')modCollapsed[p.id]=true;
+    else if(p.type==='class')classCollapsed[p.id]=true;
     p=parentMap[p.id];
   }
 }
