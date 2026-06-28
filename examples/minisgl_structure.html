@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>minisgl — component structure</title>
+<style>
+body{font-family:'Segoe UI','Inter',sans-serif;background:#0d0e1a;color:#e0e0e0;padding:28px 36px;line-height:1.55}
+h1{font-size:18px;color:#c8c8f0;margin-bottom:4px}
+.sub{color:#666680;font-size:12px;margin-bottom:18px}
+.flow{position:relative}
+.node{display:inline-block;min-width:96px;padding:5px 10px;border-radius:8px;font-size:11px;font-family:'Cascadia Code','Fira Code',monospace;margin:4px;vertical-align:top}
+.node .nm{font-weight:700}
+.node .rl{font-size:9px;text-transform:uppercase;opacity:.7;float:right}
+.entry{background:#3e4280;color:#d8d8f8}
+.engine{background:#6a5a2a;color:#e8d8a0}
+.scheduler{background:#6a4a2a;color:#e8d8a0}
+.layers{background:#2a6a3a;color:#a0e0a0}
+.models{background:#1e6a8a;color:#a0d8f0}
+.attention{background:#5a2a6a;color:#d0b0e0}
+.kvcache{background:#2a4a6a;color:#a0b8f0}
+.kernel{background:#6a2a3a;color:#e0a0b0}
+.distributed{background:#3a5a6a;color:#a0c8d8}
+.message{background:#5a4a2a;color:#e0d8a0}
+.tokenizer{background:#2a5a4a;color:#a0d8c0}
+.utils{background:#5a4a6a;color:#d0b0e0}
+.server{background:#3a3a52;color:#b0b0c8}
+.config{background:#3a3a52;color:#b0b0c8}
+.edge{color:#e8a040;font-size:11px}
+code{font-family:'Cascadia Code','Fira Code',monospace;font-size:12px;color:#8ad0f0}
+</style>
+</head>
+<body>
+<h1>minisgl</h1>
+<div class="sub">Module-level call-flow graph (modules only — the tool adds class/function detail).
+Top-to-bottom by call depth: <code>entry → server → scheduler → engine → models → layers → attention/kvcache → kernel/distributed</code>,
+with <code>message/tokenizer</code> (separate-process ZMQ) and <code>utils/core</code> (foundation) at the bottom.
+Machine-readable form is the <code>#code-arc-structure</code> JSON island below.</div>
+<div class="flow">
+  <div><span class="node entry"><span class="nm">entry</span><span class="rl">entry</span></span><span class="node server"><span class="nm">server</span><span class="rl">server</span></span><span class="node scheduler"><span class="nm">scheduler</span><span class="rl">scheduler</span></span><span class="node engine"><span class="nm">engine</span><span class="rl">engine</span></span><span class="node models"><span class="nm">models</span><span class="rl">models</span></span><span class="node layers"><span class="nm">layers</span><span class="rl">layers</span></span><span class="node attention"><span class="nm">attention</span><span class="rl">attention</span></span><span class="node kvcache"><span class="nm">kvcache</span><span class="rl">kvcache</span></span><span class="node kernel"><span class="nm">kernel</span><span class="rl">kernel</span></span><span class="node distributed"><span class="nm">distributed</span><span class="rl">distributed</span></span><span class="node message"><span class="nm">message</span><span class="rl">message</span></span><span class="node tokenizer"><span class="nm">tokenizer</span><span class="rl">tokenizer</span></span><span class="node utils"><span class="nm">utils</span><span class="rl">utils</span></span><span class="node config"><span class="nm">core</span><span class="rl">core</span></span></div>
+  <div class="edge">│ calls flow downward (see JSON island for the curated edges)</div>
+</div>
+<script type="application/json" id="code-arc-structure">
+{
+ "version": 2,
+ "project": "minisgl",
+ "modules": [
+  {
+   "full_name": "minisgl.__main__",
+   "role": "entry",
+   "subsystem": "entry",
+   "x": 40,
+   "y": 50,
+   "note": "python -m minisgl entry \u2192 launch_server"
+  },
+  {
+   "full_name": "minisgl.shell",
+   "role": "entry",
+   "subsystem": "entry",
+   "x": 290,
+   "y": 50,
+   "note": "interactive shell entry \u2192 launch_server(run_shell)"
+  },
+  {
+   "full_name": "minisgl.benchmark.client",
+   "role": "entry",
+   "subsystem": "benchmark",
+   "x": 540,
+   "y": 50,
+   "note": "async HTTP load-test client (OpenAI API)"
+  },
+  {
+   "full_name": "minisgl.benchmark.perf",
+   "role": "utility",
+   "subsystem": "benchmark",
+   "x": 790,
+   "y": 50,
+   "note": "CUDA timing / perf helpers"
+  },
+  {
+   "full_name": "minisgl.server",
+   "role": "facade",
+   "subsystem": "server",
+   "x": 40,
+   "y": 250,
+   "note": "re-exports launch_server"
+  },
+  {
+   "full_name": "minisgl.server.launch",
+   "role": "runner",
+   "subsystem": "server",
+   "x": 290,
+   "y": 250,
+   "note": "parse args, spawn scheduler+tokenizer procs, run API"
+  },
+  {
+   "full_name": "minisgl.server.api_server",
+   "role": "server",
+   "subsystem": "server",
+   "x": 540,
+   "y": 250,
+   "note": "FastAPI app + FrontendManager ZMQ bridge + shell"
+  },
+  {
+   "full_name": "minisgl.server.args",
+   "role": "config",
+   "subsystem": "server",
+   "x": 790,
+   "y": 250,
+   "note": "ServerArgs(SchedulerConfig) + parse_args"
+  },
+  {
+   "full_name": "minisgl.llm",
+   "role": "facade",
+   "subsystem": "llm",
+   "x": 40,
+   "y": 470,
+   "note": "re-exports LLM"
+  },
+  {
+   "full_name": "minisgl.llm.llm",
+   "role": "engine",
+   "subsystem": "llm",
+   "x": 290,
+   "y": 470,
+   "note": "LLM(Scheduler): offline batched generate API"
+  },
+  {
+   "full_name": "minisgl.scheduler",
+   "role": "facade",
+   "subsystem": "scheduler",
+   "x": 540,
+   "y": 470,
+   "note": "re-exports Scheduler/SchedulerConfig"
+  },
+  {
+   "full_name": "minisgl.scheduler.scheduler",
+   "role": "scheduler",
+   "subsystem": "scheduler",
+   "x": 790,
+   "y": 470,
+   "note": "Scheduler: owns Engine+managers, overlap/normal loop"
+  },
+  {
+   "full_name": "minisgl.scheduler.config",
+   "role": "config",
+   "subsystem": "scheduler",
+   "x": 1040,
+   "y": 470,
+   "note": "SchedulerConfig(EngineConfig): chunk/cache/ZMQ addrs"
+  },
+  {
+   "full_name": "minisgl.scheduler.io",
+   "role": "io",
+   "subsystem": "scheduler",
+   "x": 1290,
+   "y": 470,
+   "note": "SchedulerIOMixin: ZMQ pull/push/pub/sub msg routing"
+  },
+  {
+   "full_name": "minisgl.scheduler.prefill",
+   "role": "scheduler",
+   "subsystem": "scheduler",
+   "x": 1540,
+   "y": 470,
+   "note": "PrefillManager: chunked prefill scheduling"
+  },
+  {
+   "full_name": "minisgl.scheduler.decode",
+   "role": "scheduler",
+   "subsystem": "scheduler",
+   "x": 1790,
+   "y": 470,
+   "note": "DecodeManager: running-req decode batching"
+  },
+  {
+   "full_name": "minisgl.scheduler.cache",
+   "role": "context",
+   "subsystem": "scheduler",
+   "x": 2040,
+   "y": 470,
+   "note": "CacheManager: free slots + kvcache match/alloc/evict"
+  },
+  {
+   "full_name": "minisgl.scheduler.table",
+   "role": "context",
+   "subsystem": "scheduler",
+   "x": 2290,
+   "y": 470,
+   "note": "TableManager: page_table + token_pool alloc"
+  },
+  {
+   "full_name": "minisgl.scheduler.utils",
+   "role": "utility",
+   "subsystem": "scheduler",
+   "x": 2540,
+   "y": 470,
+   "note": "PendingReq/ScheduleResult dataclasses"
+  },
+  {
+   "full_name": "minisgl.engine",
+   "role": "facade",
+   "subsystem": "engine",
+   "x": 40,
+   "y": 690,
+   "note": "re-exports Engine/EngineConfig/ForwardOutput"
+  },
+  {
+   "full_name": "minisgl.engine.engine",
+   "role": "engine",
+   "subsystem": "engine",
+   "x": 290,
+   "y": 690,
+   "note": "Engine: per-GPU setup, model/kvcache/attn + forward_batch"
+  },
+  {
+   "full_name": "minisgl.engine.config",
+   "role": "config",
+   "subsystem": "engine",
+   "x": 540,
+   "y": 690,
+   "note": "EngineConfig: model/tp/dtype/cuda-graph/memory"
+  },
+  {
+   "full_name": "minisgl.engine.graph",
+   "role": "runner",
+   "subsystem": "engine",
+   "x": 790,
+   "y": 690,
+   "note": "GraphRunner: CUDA-graph capture/replay for decode"
+  },
+  {
+   "full_name": "minisgl.engine.sample",
+   "role": "utility",
+   "subsystem": "engine",
+   "x": 1040,
+   "y": 690,
+   "note": "Sampler: prepare + argmax/multinomial sample"
+  },
+  {
+   "full_name": "minisgl.models",
+   "role": "factory",
+   "subsystem": "models",
+   "x": 40,
+   "y": 910,
+   "note": "create_model factory \u2192 Llama/Qwen3; re-exports"
+  },
+  {
+   "full_name": "minisgl.models.base",
+   "role": "base",
+   "subsystem": "models",
+   "x": 290,
+   "y": 910,
+   "note": "BaseLLMModel(BaseOP) ABC: forward() contract"
+  },
+  {
+   "full_name": "minisgl.models.config",
+   "role": "config",
+   "subsystem": "models",
+   "x": 540,
+   "y": 910,
+   "note": "ModelConfig + RotaryConfig (from HF)"
+  },
+  {
+   "full_name": "minisgl.models.llama",
+   "role": "model",
+   "subsystem": "models",
+   "x": 790,
+   "y": 910,
+   "note": "LlamaForCausalLM decoder stack"
+  },
+  {
+   "full_name": "minisgl.models.qwen3",
+   "role": "model",
+   "subsystem": "models",
+   "x": 1040,
+   "y": 910,
+   "note": "Qwen3ForCausalLM (QK-norm)"
+  },
+  {
+   "full_name": "minisgl.models.utils",
+   "role": "builder",
+   "subsystem": "models",
+   "x": 1290,
+   "y": 910,
+   "note": "GatedMLP + RopeAttn decoder-block builders"
+  },
+  {
+   "full_name": "minisgl.models.weight",
+   "role": "loader",
+   "subsystem": "models",
+   "x": 1540,
+   "y": 910,
+   "note": "load_hf_weight: TP-shard + merge qkv/gate_up"
+  },
+  {
+   "full_name": "minisgl.layers",
+   "role": "facade",
+   "subsystem": "layers",
+   "x": 40,
+   "y": 1130,
+   "note": "re-exports layer primitives"
+  },
+  {
+   "full_name": "minisgl.layers.attention",
+   "role": "layer",
+   "subsystem": "layers",
+   "x": 290,
+   "y": 1130,
+   "note": "AttentionLayer: QKV split + QK-norm + RoPE + backend dispatch"
+  },
+  {
+   "full_name": "minisgl.layers.linear",
+   "role": "layer",
+   "subsystem": "layers",
+   "x": 540,
+   "y": 1130,
+   "note": "TP linears (col/row/QKV/O-proj) with all_reduce"
+  },
+  {
+   "full_name": "minisgl.layers.embedding",
+   "role": "layer",
+   "subsystem": "layers",
+   "x": 790,
+   "y": 1130,
+   "note": "VocabParallelEmbedding + ParallelLMHead (tied)"
+  },
+  {
+   "full_name": "minisgl.layers.norm",
+   "role": "layer",
+   "subsystem": "layers",
+   "x": 1040,
+   "y": 1130,
+   "note": "RMSNorm + RMSNormFused"
+  },
+  {
+   "full_name": "minisgl.layers.rotary",
+   "role": "layer",
+   "subsystem": "layers",
+   "x": 1290,
+   "y": 1130,
+   "note": "RotaryEmbedding (RoPE, llama3 scaling)"
+  },
+  {
+   "full_name": "minisgl.layers.activation",
+   "role": "layer",
+   "subsystem": "layers",
+   "x": 1540,
+   "y": 1130,
+   "note": "silu_and_mul gate activation"
+  },
+  {
+   "full_name": "minisgl.layers.base",
+   "role": "base",
+   "subsystem": "layers",
+   "x": 1790,
+   "y": 1130,
+   "note": "BaseOP/StateLessOP/OPList weight plumbing"
+  },
+  {
+   "full_name": "minisgl.attention",
+   "role": "factory",
+   "subsystem": "attention",
+   "x": 40,
+   "y": 1350,
+   "note": "create_attention_backend (auto/fi/fa/hybrid)"
+  },
+  {
+   "full_name": "minisgl.attention.base",
+   "role": "base",
+   "subsystem": "attention",
+   "x": 290,
+   "y": 1350,
+   "note": "BaseAttnBackend/Metadata + HybridBackend"
+  },
+  {
+   "full_name": "minisgl.attention.fi",
+   "role": "backend",
+   "subsystem": "attention",
+   "x": 540,
+   "y": 1350,
+   "note": "FlashInfer backend (paged, CUDA-graph)"
+  },
+  {
+   "full_name": "minisgl.attention.fa",
+   "role": "backend",
+   "subsystem": "attention",
+   "x": 790,
+   "y": 1350,
+   "note": "FlashAttention backend (sgl_kernel)"
+  },
+  {
+   "full_name": "minisgl.attention.utils",
+   "role": "utility",
+   "subsystem": "attention",
+   "x": 1040,
+   "y": 1350,
+   "note": "BaseCaptureData + make_positions"
+  },
+  {
+   "full_name": "minisgl.kvcache",
+   "role": "factory",
+   "subsystem": "kvcache",
+   "x": 1290,
+   "y": 1350,
+   "note": "create_kvcache(MHA) + create_cache_manager(naive/radix)"
+  },
+  {
+   "full_name": "minisgl.kvcache.base",
+   "role": "base",
+   "subsystem": "kvcache",
+   "x": 1540,
+   "y": 1350,
+   "note": "BaseKVCache/Manager/Handle ABCs"
+  },
+  {
+   "full_name": "minisgl.kvcache.mha_pool",
+   "role": "kvcache",
+   "subsystem": "kvcache",
+   "x": 1790,
+   "y": 1350,
+   "note": "MHAKVCache: paged KV buffer, store_kv"
+  },
+  {
+   "full_name": "minisgl.kvcache.naive_manager",
+   "role": "kvcache",
+   "subsystem": "kvcache",
+   "x": 2040,
+   "y": 1350,
+   "note": "NaiveCacheManager: no prefix reuse"
+  },
+  {
+   "full_name": "minisgl.kvcache.radix_manager",
+   "role": "kvcache",
+   "subsystem": "kvcache",
+   "x": 2290,
+   "y": 1350,
+   "note": "RadixCacheManager: radix prefix reuse + LRU evict"
+  },
+  {
+   "full_name": "minisgl.kernel",
+   "role": "facade",
+   "subsystem": "kernel",
+   "x": 40,
+   "y": 1570,
+   "note": "re-exports indexing/store_cache/fast_compare_key/init_pynccl"
+  },
+  {
+   "full_name": "minisgl.kernel.store",
+   "role": "kernel",
+   "subsystem": "kernel",
+   "x": 290,
+   "y": 1570,
+   "note": "JIT store_cache kernel (paged KV write)"
+  },
+  {
+   "full_name": "minisgl.kernel.index",
+   "role": "kernel",
+   "subsystem": "kernel",
+   "x": 540,
+   "y": 1570,
+   "note": "JIT embedding-gather index kernel"
+  },
+  {
+   "full_name": "minisgl.kernel.radix",
+   "role": "kernel",
+   "subsystem": "kernel",
+   "x": 790,
+   "y": 1570,
+   "note": "AOT radix fast_compare_key kernel"
+  },
+  {
+   "full_name": "minisgl.kernel.pynccl",
+   "role": "kernel",
+   "subsystem": "kernel",
+   "x": 1040,
+   "y": 1570,
+   "note": "init_pynccl NCCL communicator builder"
+  },
+  {
+   "full_name": "minisgl.kernel.utils",
+   "role": "loader",
+   "subsystem": "kernel",
+   "x": 1290,
+   "y": 1570,
+   "note": "AOT/JIT kernel load + KernelConfig"
+  },
+  {
+   "full_name": "minisgl.kernel.tensor",
+   "role": "kernel",
+   "subsystem": "kernel",
+   "x": 1540,
+   "y": 1570,
+   "note": "test_tensor AOT smoke kernel"
+  },
+  {
+   "full_name": "minisgl.kernel.__main__",
+   "role": "utility",
+   "subsystem": "kernel",
+   "x": 1790,
+   "y": 1570,
+   "note": "python -m minisgl.kernel: .clangd config gen"
+  },
+  {
+   "full_name": "minisgl.distributed",
+   "role": "facade",
+   "subsystem": "distributed",
+   "x": 2040,
+   "y": 1570,
+   "note": "re-exports DistributedInfo/Communicator"
+  },
+  {
+   "full_name": "minisgl.distributed.impl",
+   "role": "comm",
+   "subsystem": "distributed",
+   "x": 2290,
+   "y": 1570,
+   "note": "DistributedCommunicator plugin stack (torch+pynccl)"
+  },
+  {
+   "full_name": "minisgl.distributed.info",
+   "role": "distributed",
+   "subsystem": "distributed",
+   "x": 2540,
+   "y": 1570,
+   "note": "DistributedInfo + get/set/try_tp_info"
+  },
+  {
+   "full_name": "minisgl.message",
+   "role": "facade",
+   "subsystem": "message",
+   "x": 40,
+   "y": 1790,
+   "note": "re-exports backend/frontend/tokenizer msg types"
+  },
+  {
+   "full_name": "minisgl.message.backend",
+   "role": "comm",
+   "subsystem": "message",
+   "x": 290,
+   "y": 1790,
+   "note": "backend-bound msgs (UserMsg/BatchBackendMsg)"
+  },
+  {
+   "full_name": "minisgl.message.frontend",
+   "role": "comm",
+   "subsystem": "message",
+   "x": 540,
+   "y": 1790,
+   "note": "frontend reply types (UserReply)"
+  },
+  {
+   "full_name": "minisgl.message.tokenizer",
+   "role": "comm",
+   "subsystem": "message",
+   "x": 790,
+   "y": 1790,
+   "note": "tokenizer-worker msgs (Tokenize/DetokenizeMsg)"
+  },
+  {
+   "full_name": "minisgl.message.utils",
+   "role": "utility",
+   "subsystem": "message",
+   "x": 1040,
+   "y": 1790,
+   "note": "msgpack serialize/deserialize"
+  },
+  {
+   "full_name": "minisgl.tokenizer",
+   "role": "facade",
+   "subsystem": "tokenizer",
+   "x": 1290,
+   "y": 1790,
+   "note": "re-exports tokenize_worker"
+  },
+  {
+   "full_name": "minisgl.tokenizer.server",
+   "role": "tokenizer-worker",
+   "subsystem": "tokenizer",
+   "x": 1540,
+   "y": 1790,
+   "note": "tokenize_worker: ZMQ loop routing msgs"
+  },
+  {
+   "full_name": "minisgl.tokenizer.tokenize",
+   "role": "tokenizer-worker",
+   "subsystem": "tokenizer",
+   "x": 1790,
+   "y": 1790,
+   "note": "TokenizeManager: text\u2192input_ids (HF tokenizer)"
+  },
+  {
+   "full_name": "minisgl.tokenizer.detokenize",
+   "role": "tokenizer-worker",
+   "subsystem": "tokenizer",
+   "x": 2040,
+   "y": 1790,
+   "note": "DetokenizeManager: incremental streaming detok"
+  },
+  {
+   "full_name": "minisgl.utils",
+   "role": "facade",
+   "subsystem": "utils",
+   "x": 40,
+   "y": 2010,
+   "note": "re-exports logger/ZMQ queues/Registry/hf/arch/dtype"
+  },
+  {
+   "full_name": "minisgl.utils.mp",
+   "role": "comm",
+   "subsystem": "utils",
+   "x": 290,
+   "y": 2010,
+   "note": "ZmqPush/Pull/Pub/Sub queues (sync+async)"
+  },
+  {
+   "full_name": "minisgl.utils.hf",
+   "role": "loader",
+   "subsystem": "utils",
+   "x": 540,
+   "y": 2010,
+   "note": "cached_load_hf_config"
+  },
+  {
+   "full_name": "minisgl.utils.logger",
+   "role": "logger",
+   "subsystem": "utils",
+   "x": 790,
+   "y": 2010,
+   "note": "init_logger + rank0 helpers"
+  },
+  {
+   "full_name": "minisgl.utils.arch",
+   "role": "utility",
+   "subsystem": "utils",
+   "x": 1040,
+   "y": 2010,
+   "note": "GPU arch checks (sm90/sm100)"
+  },
+  {
+   "full_name": "minisgl.utils.misc",
+   "role": "utility",
+   "subsystem": "utils",
+   "x": 1290,
+   "y": 2010,
+   "note": "divide_even/up/down, UNSET, call_if_main"
+  },
+  {
+   "full_name": "minisgl.utils.registry",
+   "role": "registry",
+   "subsystem": "utils",
+   "x": 1540,
+   "y": 2010,
+   "note": "Registry name\u2192object store"
+  },
+  {
+   "full_name": "minisgl.utils.torch_utils",
+   "role": "utility",
+   "subsystem": "utils",
+   "x": 1790,
+   "y": 2010,
+   "note": "torch_dtype contextmanager"
+  },
+  {
+   "full_name": "minisgl.env",
+   "role": "config",
+   "subsystem": "core",
+   "x": 2040,
+   "y": 2010,
+   "note": "MINISGL_* env-var singleton ENV"
+  },
+  {
+   "full_name": "minisgl.core",
+   "role": "core",
+   "subsystem": "core",
+   "x": 2290,
+   "y": 2010,
+   "note": "SamplingParams/Req/Batch/Context + global ctx"
+  }
+ ],
+ "edges": [
+  {
+   "source": "minisgl.__main__",
+   "target": "minisgl.server"
+  },
+  {
+   "source": "minisgl.shell",
+   "target": "minisgl.server"
+  },
+  {
+   "source": "minisgl.benchmark.client",
+   "target": "minisgl.server"
+  },
+  {
+   "source": "minisgl.benchmark.client",
+   "target": "minisgl.utils"
+  },
+  {
+   "source": "minisgl.benchmark.perf",
+   "target": "minisgl.utils"
+  },
+  {
+   "source": "minisgl.server",
+   "target": "minisgl.server.launch"
+  },
+  {
+   "source": "minisgl.server.launch",
+   "target": "minisgl.server.args"
+  },
+  {
+   "source": "minisgl.server.launch",
+   "target": "minisgl.server.api_server"
+  },
+  {
+   "source": "minisgl.server.launch",
+   "target": "minisgl.scheduler"
+  },
+  {
+   "source": "minisgl.server.launch",
+   "target": "minisgl.tokenizer.server"
+  },
+  {
+   "source": "minisgl.server.api_server",
+   "target": "minisgl.server.args"
+  },
+  {
+   "source": "minisgl.server.api_server",
+   "target": "minisgl.message"
+  },
+  {
+   "source": "minisgl.server.api_server",
+   "target": "minisgl.utils"
+  },
+  {
+   "source": "minisgl.server.args",
+   "target": "minisgl.scheduler"
+  },
+  {
+   "source": "minisgl.llm",
+   "target": "minisgl.llm.llm"
+  },
+  {
+   "source": "minisgl.llm.llm",
+   "target": "minisgl.scheduler"
+  },
+  {
+   "source": "minisgl.llm.llm",
+   "target": "minisgl.core"
+  },
+  {
+   "source": "minisgl.llm.llm",
+   "target": "minisgl.distributed"
+  },
+  {
+   "source": "minisgl.llm.llm",
+   "target": "minisgl.message"
+  },
+  {
+   "source": "minisgl.scheduler",
+   "target": "minisgl.scheduler.scheduler"
+  },
+  {
+   "source": "minisgl.scheduler",
+   "target": "minisgl.scheduler.config"
+  },
+  {
+   "source": "minisgl.scheduler.scheduler",
+   "target": "minisgl.engine"
+  },
+  {
+   "source": "minisgl.scheduler.scheduler",
+   "target": "minisgl.scheduler.io"
+  },
+  {
+   "source": "minisgl.scheduler.scheduler",
+   "target": "minisgl.scheduler.cache"
+  },
+  {
+   "source": "minisgl.scheduler.scheduler",
+   "target": "minisgl.scheduler.table"
+  },
+  {
+   "source": "minisgl.scheduler.scheduler",
+   "target": "minisgl.scheduler.decode"
+  },
+  {
+   "source": "minisgl.scheduler.scheduler",
+   "target": "minisgl.scheduler.prefill"
+  },
+  {
+   "source": "minisgl.scheduler.scheduler",
+   "target": "minisgl.message"
+  },
+  {
+   "source": "minisgl.scheduler.scheduler",
+   "target": "minisgl.core"
+  },
+  {
+   "source": "minisgl.scheduler.config",
+   "target": "minisgl.engine"
+  },
+  {
+   "source": "minisgl.scheduler.io",
+   "target": "minisgl.message"
+  },
+  {
+   "source": "minisgl.scheduler.io",
+   "target": "minisgl.utils"
+  },
+  {
+   "source": "minisgl.scheduler.cache",
+   "target": "minisgl.kvcache"
+  },
+  {
+   "source": "minisgl.scheduler.prefill",
+   "target": "minisgl.core"
+  },
+  {
+   "source": "minisgl.scheduler.prefill",
+   "target": "minisgl.utils"
+  },
+  {
+   "source": "minisgl.engine",
+   "target": "minisgl.engine.engine"
+  },
+  {
+   "source": "minisgl.engine",
+   "target": "minisgl.engine.config"
+  },
+  {
+   "source": "minisgl.engine.engine",
+   "target": "minisgl.models"
+  },
+  {
+   "source": "minisgl.engine.engine",
+   "target": "minisgl.kvcache"
+  },
+  {
+   "source": "minisgl.engine.engine",
+   "target": "minisgl.attention"
+  },
+  {
+   "source": "minisgl.engine.engine",
+   "target": "minisgl.layers"
+  },
+  {
+   "source": "minisgl.engine.engine",
+   "target": "minisgl.distributed"
+  },
+  {
+   "source": "minisgl.engine.engine",
+   "target": "minisgl.utils"
+  },
+  {
+   "source": "minisgl.engine.engine",
+   "target": "minisgl.core"
+  },
+  {
+   "source": "minisgl.engine.engine",
+   "target": "minisgl.engine.graph"
+  },
+  {
+   "source": "minisgl.engine.engine",
+   "target": "minisgl.engine.sample"
+  },
+  {
+   "source": "minisgl.engine.graph",
+   "target": "minisgl.core"
+  },
+  {
+   "source": "minisgl.models",
+   "target": "minisgl.models.base"
+  },
+  {
+   "source": "minisgl.models",
+   "target": "minisgl.models.config"
+  },
+  {
+   "source": "minisgl.models",
+   "target": "minisgl.models.weight"
+  },
+  {
+   "source": "minisgl.models",
+   "target": "minisgl.models.llama"
+  },
+  {
+   "source": "minisgl.models",
+   "target": "minisgl.models.qwen3"
+  },
+  {
+   "source": "minisgl.models.base",
+   "target": "minisgl.layers"
+  },
+  {
+   "source": "minisgl.models.llama",
+   "target": "minisgl.models.base"
+  },
+  {
+   "source": "minisgl.models.llama",
+   "target": "minisgl.models.utils"
+  },
+  {
+   "source": "minisgl.models.qwen3",
+   "target": "minisgl.models.base"
+  },
+  {
+   "source": "minisgl.models.qwen3",
+   "target": "minisgl.models.utils"
+  },
+  {
+   "source": "minisgl.models.utils",
+   "target": "minisgl.layers"
+  },
+  {
+   "source": "minisgl.models.weight",
+   "target": "minisgl.distributed"
+  },
+  {
+   "source": "minisgl.models.weight",
+   "target": "minisgl.utils"
+  },
+  {
+   "source": "minisgl.layers",
+   "target": "minisgl.layers.attention"
+  },
+  {
+   "source": "minisgl.layers",
+   "target": "minisgl.layers.linear"
+  },
+  {
+   "source": "minisgl.layers",
+   "target": "minisgl.layers.embedding"
+  },
+  {
+   "source": "minisgl.layers",
+   "target": "minisgl.layers.norm"
+  },
+  {
+   "source": "minisgl.layers",
+   "target": "minisgl.layers.rotary"
+  },
+  {
+   "source": "minisgl.layers",
+   "target": "minisgl.layers.activation"
+  },
+  {
+   "source": "minisgl.layers",
+   "target": "minisgl.layers.base"
+  },
+  {
+   "source": "minisgl.layers.attention",
+   "target": "minisgl.attention"
+  },
+  {
+   "source": "minisgl.layers.attention",
+   "target": "minisgl.layers.rotary"
+  },
+  {
+   "source": "minisgl.layers.attention",
+   "target": "minisgl.core"
+  },
+  {
+   "source": "minisgl.layers.attention",
+   "target": "minisgl.distributed"
+  },
+  {
+   "source": "minisgl.layers.embedding",
+   "target": "minisgl.kernel"
+  },
+  {
+   "source": "minisgl.layers.embedding",
+   "target": "minisgl.distributed"
+  },
+  {
+   "source": "minisgl.layers.linear",
+   "target": "minisgl.distributed"
+  },
+  {
+   "source": "minisgl.attention",
+   "target": "minisgl.attention.base"
+  },
+  {
+   "source": "minisgl.attention",
+   "target": "minisgl.attention.fi"
+  },
+  {
+   "source": "minisgl.attention",
+   "target": "minisgl.attention.fa"
+  },
+  {
+   "source": "minisgl.attention",
+   "target": "minisgl.utils"
+  },
+  {
+   "source": "minisgl.attention.fi",
+   "target": "minisgl.kvcache"
+  },
+  {
+   "source": "minisgl.attention.fa",
+   "target": "minisgl.kvcache"
+  },
+  {
+   "source": "minisgl.kvcache",
+   "target": "minisgl.kvcache.base"
+  },
+  {
+   "source": "minisgl.kvcache",
+   "target": "minisgl.kvcache.mha_pool"
+  },
+  {
+   "source": "minisgl.kvcache",
+   "target": "minisgl.kvcache.naive_manager"
+  },
+  {
+   "source": "minisgl.kvcache",
+   "target": "minisgl.kvcache.radix_manager"
+  },
+  {
+   "source": "minisgl.kvcache",
+   "target": "minisgl.utils"
+  },
+  {
+   "source": "minisgl.kvcache.mha_pool",
+   "target": "minisgl.kernel"
+  },
+  {
+   "source": "minisgl.kvcache.radix_manager",
+   "target": "minisgl.kernel"
+  },
+  {
+   "source": "minisgl.kernel",
+   "target": "minisgl.kernel.store"
+  },
+  {
+   "source": "minisgl.kernel",
+   "target": "minisgl.kernel.index"
+  },
+  {
+   "source": "minisgl.kernel",
+   "target": "minisgl.kernel.radix"
+  },
+  {
+   "source": "minisgl.kernel",
+   "target": "minisgl.kernel.pynccl"
+  },
+  {
+   "source": "minisgl.kernel",
+   "target": "minisgl.kernel.tensor"
+  },
+  {
+   "source": "minisgl.kernel.store",
+   "target": "minisgl.kernel.utils"
+  },
+  {
+   "source": "minisgl.kernel.index",
+   "target": "minisgl.kernel.utils"
+  },
+  {
+   "source": "minisgl.kernel.radix",
+   "target": "minisgl.kernel.utils"
+  },
+  {
+   "source": "minisgl.kernel.pynccl",
+   "target": "minisgl.kernel.utils"
+  },
+  {
+   "source": "minisgl.kernel.pynccl",
+   "target": "minisgl.env"
+  },
+  {
+   "source": "minisgl.kernel.tensor",
+   "target": "minisgl.kernel.utils"
+  },
+  {
+   "source": "minisgl.kernel.__main__",
+   "target": "minisgl.kernel.utils"
+  },
+  {
+   "source": "minisgl.distributed",
+   "target": "minisgl.distributed.impl"
+  },
+  {
+   "source": "minisgl.distributed",
+   "target": "minisgl.distributed.info"
+  },
+  {
+   "source": "minisgl.distributed.impl",
+   "target": "minisgl.kernel"
+  },
+  {
+   "source": "minisgl.distributed.impl",
+   "target": "minisgl.distributed.info"
+  },
+  {
+   "source": "minisgl.message",
+   "target": "minisgl.message.backend"
+  },
+  {
+   "source": "minisgl.message",
+   "target": "minisgl.message.frontend"
+  },
+  {
+   "source": "minisgl.message",
+   "target": "minisgl.message.tokenizer"
+  },
+  {
+   "source": "minisgl.message.backend",
+   "target": "minisgl.message.utils"
+  },
+  {
+   "source": "minisgl.message.frontend",
+   "target": "minisgl.message.utils"
+  },
+  {
+   "source": "minisgl.message.tokenizer",
+   "target": "minisgl.message.utils"
+  },
+  {
+   "source": "minisgl.message.backend",
+   "target": "minisgl.core"
+  },
+  {
+   "source": "minisgl.message.tokenizer",
+   "target": "minisgl.core"
+  },
+  {
+   "source": "minisgl.tokenizer",
+   "target": "minisgl.tokenizer.server"
+  },
+  {
+   "source": "minisgl.tokenizer.server",
+   "target": "minisgl.message"
+  },
+  {
+   "source": "minisgl.tokenizer.server",
+   "target": "minisgl.utils"
+  },
+  {
+   "source": "minisgl.tokenizer.server",
+   "target": "minisgl.tokenizer.tokenize"
+  },
+  {
+   "source": "minisgl.tokenizer.server",
+   "target": "minisgl.tokenizer.detokenize"
+  },
+  {
+   "source": "minisgl.utils",
+   "target": "minisgl.utils.mp"
+  },
+  {
+   "source": "minisgl.utils",
+   "target": "minisgl.utils.hf"
+  },
+  {
+   "source": "minisgl.utils",
+   "target": "minisgl.utils.logger"
+  },
+  {
+   "source": "minisgl.utils",
+   "target": "minisgl.utils.arch"
+  },
+  {
+   "source": "minisgl.utils",
+   "target": "minisgl.utils.misc"
+  },
+  {
+   "source": "minisgl.utils",
+   "target": "minisgl.utils.registry"
+  },
+  {
+   "source": "minisgl.utils",
+   "target": "minisgl.utils.torch_utils"
+  },
+  {
+   "source": "minisgl.utils.logger",
+   "target": "minisgl.distributed"
+  }
+ ]
+}
+</script>
+</body>
+</html>

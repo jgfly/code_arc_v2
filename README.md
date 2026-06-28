@@ -7,7 +7,7 @@
   (entry point, engine, scheduler, …), with **call-direction arrows** between modules.
 - Each module carries a **collapse dot** on its bottom edge; click it to reveal that module's
   classes/functions as a tidy row below the module (the "add detail" part). A class is one block
-  (header + inline methods list, max-width ~340).
+  (header + inline methods list, width 260–480).
 - An **expand-level slider**: 0 = module graph only (default) → 1 = + classes/functions →
   2 = + class methods.
 - Function-level call edges + inheritance (from the AST) are drawn among the visible blocks.

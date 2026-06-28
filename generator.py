@@ -10,7 +10,7 @@ Render model:
     grouped by subsystem background boxes, connected by the LLM's call-direction arrows.
   * Each module carries a **collapse dot** on its bottom edge; click toggles a tidy row of its
     AST classes/functions directly below the module (the "add detail" part). A class is one block
-    (header + inline methods list, max-width ~340).
+    (header + inline methods list, width 260–480).
   * An **expand-level slider** sets depth: 0 = module graph only (default) → 1 = + classes/functions
     → 2 = + class methods. Per-module dots refine locally.
   * Function-level call edges (AST) + inheritance are drawn among visible class/function blocks.
@@ -175,7 +175,7 @@ body:not(.edges-on-top) #fg-svg{z-index:0}
 .module-block .nhdr{background:linear-gradient(135deg,#3e4280,#33366a);color:#d8d8f8;font-size:13px}
 .module-block.no-ast{border-style:dashed;opacity:.7}
 .module-block.no-ast .nhdr{background:linear-gradient(135deg,#3a3a52,#2e2e44)}
-.class-block{border:1px solid #1e557566;border-radius:9px;background:linear-gradient(160deg,#13202e,#11253a);max-width:340px}
+.class-block{border:1px solid #1e557566;border-radius:9px;background:linear-gradient(160deg,#13202e,#11253a);min-width:260px;max-width:480px}
 .class-block .nhdr{background:linear-gradient(135deg,#1e6a8a,#1a5a78);color:#a0d8f0;font-size:12.5px;border-radius:9px 9px 0 0}
 .class-block .bases{font-size:10.5px;color:#5a98b8;font-weight:400}
 .class-init{padding:3px 12px 5px;font-size:10px;color:#5a90aa;font-family:'Cascadia Code','Fira Code','Consolas',monospace;border-bottom:1px solid #1e557520;word-break:break-all}
@@ -188,7 +188,7 @@ body:not(.edges-on-top) #fg-svg{z-index:0}
 .method-block .bases{font-size:10px;color:#9a60a0;font-weight:400}
 .method-block.search-hit{border-color:#ffd54f!important;box-shadow:0 0 0 2px #ffd54f60!important}
 .method-sig{padding:1px 9px 4px 29px;font-size:10px;color:#7a507a;font-family:'Cascadia Code','Fira Code','Consolas',monospace;line-height:1.4;word-break:break-all}
-.func-block{border:1px solid #2a6a2a66;border-radius:8px;background:linear-gradient(160deg,#102014,#0e2218);max-width:340px}
+.func-block{border:1px solid #2a6a2a66;border-radius:8px;background:linear-gradient(160deg,#102014,#0e2218);min-width:260px;max-width:480px}
 .func-block .nhdr{background:linear-gradient(135deg,#2a6a3a,#226030);color:#90d890;font-size:12px;border-radius:8px}
 .func-block .bases{font-size:10.5px;color:#5a9858;font-weight:400}
 .func-sig{padding:2px 12px 5px 30px;font-size:10px;color:#508a50;font-family:'Cascadia Code','Fira Code','Consolas',monospace;word-break:break-all}
